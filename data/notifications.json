@@ -1,0 +1,79 @@
+[
+  {
+    "id": 1774994287194,
+    "title": "Teste de Sistema",
+    "message": "Notificação de teste disparada do painel do Home Lab.",
+    "date": "2026-03-31T21:58:07.193Z",
+    "read": true
+  },
+  {
+    "id": 1774994279934,
+    "title": "Teste de Sistema",
+    "message": "Notificação de teste disparada do painel do Home Lab.",
+    "date": "2026-03-31T21:57:59.933Z",
+    "read": true
+  },
+  {
+    "id": 1774994066722,
+    "title": "Teste de Sistema",
+    "message": "Esta é uma notificação de teste disparada do painel de controle.",
+    "date": "2026-03-31T21:54:26.721Z",
+    "read": true
+  },
+  {
+    "id": 1774994009664,
+    "title": "Teste de Sistema",
+    "message": "Esta é uma notificação de teste disparada do painel de controle.",
+    "date": "2026-03-31T21:53:29.664Z",
+    "read": true
+  },
+  {
+    "id": 1774994008621,
+    "title": "Teste de Sistema",
+    "message": "Esta é uma notificação de teste disparada do painel de controle.",
+    "date": "2026-03-31T21:53:28.619Z",
+    "read": true
+  },
+  {
+    "id": 1774994004640,
+    "title": "Teste de Sistema",
+    "message": "Esta é uma notificação de teste disparada do painel de controle.",
+    "date": "2026-03-31T21:53:24.639Z",
+    "read": true
+  },
+  {
+    "id": 1774994004410,
+    "title": "Teste de Sistema",
+    "message": "Esta é uma notificação de teste disparada do painel de controle.",
+    "date": "2026-03-31T21:53:24.410Z",
+    "read": true
+  },
+  {
+    "id": 1774994004185,
+    "title": "Teste de Sistema",
+    "message": "Esta é uma notificação de teste disparada do painel de controle.",
+    "date": "2026-03-31T21:53:24.184Z",
+    "read": true
+  },
+  {
+    "id": 1774994004039,
+    "title": "Teste de Sistema",
+    "message": "Esta é uma notificação de teste disparada do painel de controle.",
+    "date": "2026-03-31T21:53:24.039Z",
+    "read": true
+  },
+  {
+    "id": 1774994003255,
+    "title": "Teste de Sistema",
+    "message": "Esta é uma notificação de teste disparada do painel de controle.",
+    "date": "2026-03-31T21:53:23.255Z",
+    "read": true
+  },
+  {
+    "id": 1774994000951,
+    "title": "Teste de Sistema",
+    "message": "Esta é uma notificação de teste disparada do painel de controle.",
+    "date": "2026-03-31T21:53:20.951Z",
+    "read": true
+  }
+]
