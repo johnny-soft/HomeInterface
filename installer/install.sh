@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# HomeLab Manager - Full Stack Installer (UFW + Nginx + Docker + KVM)
-# Versão: 3.1 (Março 2026) - Atualizado com Firewall & Web Server
+# HomeLab Manager - Full Stack Installer (UFW + Nginx + Docker + KVM + Samba)
+# Versão: 3.2 (Março 2026) - Atualizado com Sudoers em Grupo, ZFS e Firewall do Samba
 #
 
 set -e
@@ -29,7 +29,7 @@ error() { echo -e "${RED}[ERROR]${NC} $1" && echo "[$(date '+%Y-%m-%d %H:%M:%S')
 print_banner() {
     echo -e "${BLUE}"
     echo "╔═══════════════════════════════════════════════════════════════╗"
-    echo "║          HomeLab Manager - Full Stack Installer v3.1          ║"
+    echo "║          HomeLab Manager - Full Stack Installer v3.2          ║"
     echo "║     Firewall | WebServer | Docker | KVM | Next.js Engine      ║"
     echo "╚═══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
@@ -158,17 +158,18 @@ EOF
 }
 
 create_services() {
-    log "Criando serviços e Sudoers (Liberando UFW, Nginx e SH)..."
+    log "Criando serviços e Sudoers (Liberando UFW, Nginx, SH, ZFS)..."
     
-    # Sudoers: Sincronizado com as necessidades das Actions
+    # Sudoers: Usando '%' para aplicar ao GRUPO homelab inteiro, e incluindo zfs/zpool
     cat > /etc/sudoers.d/homelab << EOF
-$HOMELAB_USER ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/bin/docker-compose, /usr/bin/virsh, /usr/sbin/nginx, /usr/bin/systemctl, /usr/sbin/lsblk, /usr/bin/node, /usr/bin/virt-install, /usr/bin/netplan, /usr/sbin/ufw, /usr/bin/sh, /usr/bin/cat, /usr/bin/hostnamectl, /usr/bin/df
+%${HOMELAB_USER} ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/bin/docker-compose, /usr/bin/virsh, /usr/sbin/nginx, /usr/bin/systemctl, /usr/sbin/lsblk, /usr/bin/node, /usr/bin/virt-install, /usr/bin/netplan, /usr/sbin/ufw, /usr/bin/sh, /usr/bin/cat, /usr/bin/hostnamectl, /usr/bin/df, /usr/sbin/zfs, /usr/sbin/zpool
 EOF
     chmod 440 /etc/sudoers.d/homelab
 
     # Firewall inicial
     ufw allow 22/tcp
     ufw allow $HOMELAB_PORT/tcp
+    ufw allow samba # Libera acesso do Windows ao Samba (WSL/Físico)
 
     # App Service
     cat > /etc/systemd/system/homelab.service << EOF
@@ -197,6 +198,7 @@ main() {
     print_banner
     check_env
     
+    # Garante que o usuário do serviço existe
     if ! id "$HOMELAB_USER" &>/dev/null; then useradd -r -m -s /bin/bash "$HOMELAB_USER"; fi
     
     install_dependencies
@@ -205,16 +207,27 @@ main() {
     install_docker
     setup_vnc_proxy
     
+    # Adiciona o usuário do serviço aos grupos de virtualização
     usermod -aG docker,libvirt $HOMELAB_USER
+    
+    # SEGREDO DO DESENVOLVEDOR: Se o script foi rodado com "sudo ./install.sh", 
+    # o $SUDO_USER é o seu usuário logado (ex: marcelo, vitor, ubuntu). 
+    # Isso coloca você no grupo homelab e resolve todos os problemas de senha no 'npm run dev'
+    if [ -n "$SUDO_USER" ]; then
+        log "Adicionando o usuário de desenvolvimento ($SUDO_USER) aos grupos essenciais..."
+        usermod -aG $HOMELAB_USER,docker,libvirt "$SUDO_USER"
+    fi
     
     install_nodejs_and_app
     create_services
 
     local IP=$(hostname -I | awk '{print $1}')
     echo ""
-    echo -e "${GREEN}✅ INSTALAÇÃO v3.1 CONCLUÍDA!${NC}"
+    echo -e "${GREEN}✅ INSTALAÇÃO v3.2 CONCLUÍDA!${NC}"
     echo -e "${BLUE}Dashboard: http://$IP:$HOMELAB_PORT${NC}"
     echo -e "${GREEN}Caminho de Dados: $HOMELAB_DIR/data${NC}"
+    echo -e "${GREEN}Nota: Se você for rodar o ambiente de desenvolvimento local (npm run dev),${NC}"
+    echo -e "${GREEN}      feche este terminal e abra um novo para atualizar suas permissões de grupo.${NC}"
     echo -e "${GREEN}=================================================${NC}"
 }
 
