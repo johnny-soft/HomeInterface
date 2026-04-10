@@ -1,74 +1,160 @@
-# 🚀 [Nome do Projeto]
+# HomeLab Manager
 
-!License
-!Version
-!Docker
+![Node.js](https://img.shields.io/badge/Node.js-20-brightgreen)
+![pnpm](https://img.shields.io/badge/pnpm-%E2%89%A5%206-blue)
+![Next.js](https://img.shields.io/badge/Next.js-16.2.0-black)
+![React](https://img.shields.io/badge/React-19.2.4-61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7.3-3178C6)
 
-> **Uma breve e clara descrição do que o seu projeto faz.** Por exemplo: *"Este repositório contém uma infraestrutura padronizada e automatizada utilizando Docker para facilitar o provisionamento de serviços web. Ideal para ambientes de desenvolvimento, laboratórios (homelabs) e pequenos servidores."*
+## Descrição
 
-## ✨ Funcionalidades Principais (Features)
+HomeLab Manager é uma aplicação web de gerenciamento de infraestrutura local, projetada para ambientes Linux. O sistema reúne monitoramento e controle de containers Docker, máquinas virtuais KVM, firewall UFW, proxy reverso Nginx, storage ZFS/Samba, rede e configurações de sistema em um painel centralizado.
 
-* 📦 **Ambiente Isolado:** Todos os serviços são executados em contêineres, evitando conflitos no sistema operacional base.
-* ⚙️ **Fácil Customização:** O projeto utiliza um sistema baseado em variáveis de ambiente (`.env`) para facilitar a adaptação às suas necessidades.
-* 🚀 **Deploy Rápido:** Coloque toda a sua stack online com apenas um comando.
-* 🔄 **Escalabilidade & Portabilidade:** Facilmente migrável entre diferentes provedores de nuvem ou servidores locais.
-* 🛡️ **Segurança:** Configuração focada no isolamento de redes e gerenciamento de permissões de volumes.
+## Stack Tecnológica
 
-## 🛠️ Tecnologias e Ferramentas
+- Linguagem: `TypeScript`
+- Frontend: `Next.js 16.2.0`
+- UI: `React 19.2.4`, `Tailwind CSS`, `Radix UI` (via componentes shadcn/ui)
+- Gerenciamento de pacotes: `pnpm`
+- Autenticação/formulários: `react-hook-form`, `zod`, `bcryptjs`, `jose`, `swr`
+- Backend: `Node.js`, rotas API do Next.js
+- Shell automation: `lib/shell-executor.ts` com `child_process`
+- Infraestrutura Linux: `Docker`, `Nginx`, `UFW`, `Libvirt/KVM`, `Samba`, `Netplan`, `Certbot`, `ZFS`
 
-Este projeto foi construído utilizando as seguintes tecnologias:
+## Funcionalidades (Features)
 
-* Docker - Plataforma de contêineres.
-* Docker Compose - Ferramenta para orquestrar múltiplos contêineres.
-* Linux - Recomendado como sistema operacional base (Ubuntu / Debian).
-* *(Adicione aqui outras linguagens ou frameworks relevantes, ex: Node.js, Python, PostgreSQL)*
+- 📊 Painel de monitoramento de hardware, containers Docker, VMs KVM e serviços de sistema
+- 🔥 Gerenciamento completo de firewall UFW com criação, remoção e ativação/desativação de regras
+- 🌐 Configuração de proxy reverso Nginx com suporte a SSL via `certbot`
+- 🌍 Administração de rede com leitura de interfaces, DNS e netplan
+- 💾 Controle de storage com detecção de discos, pools ZFS e criação de compartilhamentos Samba
+- 📁 Upload de ISOs para `/var/lib/libvirt/images` via API de upload
+- 👤 Gestão de usuários, configurações gerais e notifications internas
+- 🛠️ Instalador automático que cria serviço systemd, sudoers e ambiente de produção
 
-## 🚀 Guia Rápido de Instalação e Uso
+## Permissões de Sistema
 
-Siga as instruções abaixo para rodar o projeto no seu ambiente local ou servidor.
+### Requisitos de permissão
 
-### 1. Pré-requisitos
-Antes de começar, certifique-se de ter instalado em sua máquina:
-* **Git**
-* **Docker Engine**
-* **Docker Compose Plugin**
+- O instalador `installer/install.sh` precisa ser executado como `root` ou via `sudo`.
+- O sistema deve permitir a execução de comandos administrativos e acesso a arquivos de sistema.
+- O projeto espera rodar em Linux, preferencialmente distribuições baseadas em Debian/Ubuntu.
 
-### 2. Passos para a Instalação
+### Comandos administrativos usados
 
-Clone este repositório para a sua máquina:
+O código invoca `sudo` para comandos como:
+
+- `docker`, `docker-compose`
+- `virsh`, `virt-install`, `qemu-img`
+- `nginx`, `certbot`, `systemctl`
+- `ufw`, `netplan`, `resolvectl`, `hostnamectl`
+- `zpool`, `zfs`, `lsblk`, `smartctl`
+- `chown`, `chmod`, `mkdir`, `cp`, `cat`, `bash`
+
+### Diretórios e arquivos críticos
+
+- `/opt/homelab` — diretório principal da aplicação
+- `/opt/homelab/data` — armazenamento de dados persistentes (`users.json`, `settings.json`, `notifications.json`)
+- `/var/lib/libvirt/images` — destino de upload de ISOs
+- `/etc/netplan` — configurações de rede gerenciadas pelo app
+- `/etc/nginx/sites-available` e `/etc/nginx/sites-enabled` — configurações de proxy
+- `/etc/hosts` — entradas de domínio automático adicionadas pelo app
+- `/etc/samba/smb.conf` — compartilhamentos Samba configurados pelo app
+
+### Portas de rede necessárias
+
+- `3000` — porta padrão do HomeLab Manager
+- `80` / `443` — Nginx para proxy reverso e certificados
+- `6080` — NoVNC / proxy WebSocket para acesso VNC
+- `22` — SSH (liberado pelo instalador)
+- portas Samba/SMB (usadas para compartilhamentos de rede)
+
+## Instalação e Configuração
+
+> O projeto foi desenvolvido para execução nativa em Linux. O instalador automatiza a maior parte das dependências e configuração de serviços.
+
+### 1. Preparar o diretório do projeto
+
 ```bash
-git clone https://github.com/seu-usuario/nome-do-projeto.git
-cd nome-do-projeto
+sudo mkdir -p /opt/homelab
+sudo chown $USER:$USER /opt/homelab
+cd /opt/homelab
+# copie ou clone o repositório para este diretório
 ```
 
-Crie seu arquivo de configuração a partir do modelo disponibilizado:
+### 2. Executar o instalador principal
+
 ```bash
-cp .env.example .env
-# Edite o arquivo .env conforme a necessidade do seu ambiente
+sudo bash installer/install.sh
 ```
 
-### 3. Rodando o Projeto
-Para inicializar todos os serviços configurados em segundo plano, execute:
+### 3. O que o instalador configura
+
+- Instala dependências base do sistema (`curl`, `wget`, `git`, `build-essential`, `software-properties-common`, `net-tools`, `ufw`, `nginx`, `qemu-kvm`, `libvirt`, `virtinst`, `novnc`, `mailutils`)
+- Prepara ambiente web e diretórios
+- Configura rede bridge com `netplan`
+- Instala Docker Engine e habilita o serviço
+- Configura VNC proxy via `websockify`
+- Instala Node.js 20 e `pnpm`
+- Executa `pnpm install` e `pnpm build`
+- Gera arquivo `.env` com `NODE_ENV=production`, `PORT=3000` e `JWT_SECRET`
+- Cria o serviço `homelab.service` no systemd
+- Cria arquivo sudoers em `/etc/sudoers.d/homelab`
+- Libera portas no UFW
+
+### 4. Observações de configuração
+
+- O instalador assume o uso de `/opt/homelab` como raiz do projeto.
+- O systemd service do app roda como usuário `homelab`.
+- Caso use o modo de desenvolvimento, é comum abrir um novo terminal para atualizar a associação de grupos do usuário.
+
+## Como Rodar
+
+### Rodando em produção
+
 ```bash
-docker compose up -d
+sudo systemctl enable --now homelab
+sudo systemctl status homelab
 ```
 
-*(Opcional)* Verifique se tudo está funcionando corretamente olhando os logs:
+### Atualizar/buildar e reiniciar serviço
+
 ```bash
-docker compose logs -f
+cd /opt/homelab
+pnpm build
+sudo cp -r public .next/standalone/
+sudo cp -r .next/static .next/standalone/.next/
+sudo systemctl restart homelab
 ```
 
-## 🤝 Como Contribuir
+### Rodando em desenvolvimento
 
-Contribuições são o que tornam a comunidade open-source um lugar incrível para aprender, inspirar e criar. Qualquer contribuição que você fizer será **muito apreciada**.
+```bash
+cd /opt/homelab
+pnpm install
+pnpm dev
+```
 
-1. Faça um **Fork** do projeto
-2. Crie uma Branch para sua Feature (`git checkout -b feature/MinhaFeatureIncrivel`)
-3. Adicione suas mudanças (`git add .`)
-4. Faça o Commit de suas mudanças (`git commit -m 'Adiciona uma feature incrível'`)
-5. Faça o Push para a Branch (`git push origin feature/MinhaFeatureIncrivel`)
-6. Abra um **Pull Request**
+Acesse a aplicação em:
 
-## 📄 Licença
+```text
+http://localhost:3000
+```
 
-Este projeto é distribuído sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes ou leia aqui sobre a Licença MIT.
+### Scripts disponíveis
+
+```bash
+pnpm install
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
+```
+
+## Observações Adicionais
+
+- Não há `Dockerfile` presente no repositório atual.
+- O script `atualizar.sh` contém um fluxo de build e reinicialização do serviço.
+- O upload de imagens ISO é tratado por `app/api/vms/upload/route.ts` e grava diretamente em `/var/lib/libvirt/images`.
+- As configurações do painel são salvas em JSON no diretório `/opt/homelab/data`.
+- O serviço criado pelo instalador é `homelab.service` e depende de `docker.service` e `libvirtd.service`.
